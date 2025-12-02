@@ -1,0 +1,104 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import CalendarView from '../../components/CalendarView';
+import { supabase } from '../../lib/supabase';
+
+export const prerender = false; // SSR is required for dynamic availability
+
+const { providerId } = Astro.params;
+
+if (!providerId) {
+  return Astro.redirect('/');
+}
+
+// Fetch doctor details
+const { data: doctor, error: doctorError } = await supabase
+  .from('doctors')
+  .select('*')
+  .eq('id', providerId)
+  .single();
+
+if (doctorError || !doctor) {
+  return Astro.redirect('/404');
+}
+
+// Fetch existing appointments for this doctor to show availability
+// In a real app, you might want to filter by date range (e.g., current month)
+const { data: appointments, error: apptError } = await supabase
+  .from('appointments')
+  .select('start_time, status')
+  .eq('doctor_id', providerId)
+  .eq('status', 'confirmed');
+
+// Transform appointments for the calendar
+const calendarEvents = appointments?.map(appt => {
+    const start = new Date(appt.start_time);
+    const end = new Date(start.getTime() + 60 * 60 * 1000); // Assume 1 hour duration
+    return {
+        start: start,
+        end: end,
+        title: 'Ocupado'
+    };
+}) || [];
+
+---
+
+<MainLayout title={`Reservar con ${doctor.name} | Citas Astro`}>
+  <div class="max-w-6xl mx-auto">
+    <a href="/" class="inline-flex items-center text-slate-600 hover:text-blue-600 mb-6 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+      </svg>
+      Volver al listado
+    </a>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Doctor Info Sidebar */}
+      <aside class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 sticky top-24">
+          <div class="w-32 h-32 bg-blue-100 rounded-full mx-auto mb-4 overflow-hidden flex items-center justify-center">
+             {doctor.image_url ? (
+              <img src={doctor.image_url} alt={doctor.name} class="w-full h-full object-cover" />
+            ) : (
+              <span class="text-4xl">👨‍⚕️</span>
+            )}
+          </div>
+          <h1 class="text-2xl font-bold text-slate-900 text-center mb-2">{doctor.name}</h1>
+          <p class="text-blue-600 font-medium text-center mb-6">{doctor.specialty}</p>
+          
+          <div class="prose prose-sm text-slate-600 mb-6">
+            <h3 class="text-slate-900 font-semibold mb-2">Acerca del doctor</h3>
+            <p>{doctor.bio}</p>
+          </div>
+
+          <div class="border-t border-slate-100 pt-6">
+            <h3 class="text-slate-900 font-semibold mb-3">Información importante</h3>
+            <ul class="text-sm text-slate-600 space-y-2">
+              <li class="flex items-start">
+                <span class="mr-2">⏱️</span> Duración de cita: 1 hora
+              </li>
+              <li class="flex items-start">
+                <span class="mr-2">📍</span> Consultorio 304, Torre Médica
+              </li>
+              <li class="flex items-start">
+                <span class="mr-2">⚠️</span> Cancelaciones con 24h de anticipación
+              </li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+
+      {/* Calendar Area */}
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <h2 class="text-xl font-bold text-slate-900 mb-6">Selecciona un horario disponible</h2>
+            <CalendarView 
+                client:load 
+                doctorId={doctor.id} 
+                initialAppointments={calendarEvents} 
+            />
+        </div>
+      </div>
+    </div>
+  </div>
+</MainLayout>

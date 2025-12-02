@@ -1,18 +1,74 @@
 ---
+import MainLayout from '../layouts/MainLayout.astro';
+import { supabase } from '../lib/supabase';
+
+interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  bio: string;
+  image_url: string | null;
+}
+
+const { data: doctors, error } = await supabase
+  .from('doctors')
+  .select('*')
+  .order('name');
+
+if (error) {
+  console.error('Error fetching doctors:', error);
+}
 ---
 
-<html lang="es">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Sistema de Citas</title>
-	</head>
-	<body class="bg-gray-50 min-h-screen">
-		<main class="container mx-auto px-4 py-8">
-			<h1 class="text-4xl font-bold text-center text-blue-900 mb-8">Sistema de Citas Médicas</h1>
-            <p class="text-center text-gray-600">Bienvenido. Selecciona un doctor para comenzar.</p>
-		</main>
-	</body>
-</html>
+<MainLayout title="Doctores Disponibles | Citas Astro">
+  <section class="max-w-4xl mx-auto">
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-extrabold text-slate-900 mb-4">Encuentra tu Especialista</h1>
+      <p class="text-lg text-slate-600">Reserva tu cita médica de manera rápida y sencilla.</p>
+    </div>
+
+    {error && (
+      <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-8" role="alert">
+        <p class="font-bold text-red-700">Error</p>
+        <p class="text-red-600">No se pudieron cargar los doctores. Por favor intenta más tarde.</p>
+      </div>
+    )}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {doctors?.map((doctor) => (
+        <article class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-slate-100 flex flex-col">
+          <div class="h-48 bg-blue-100 flex items-center justify-center">
+            {doctor.image_url ? (
+              <img src={doctor.image_url} alt={doctor.name} class="w-full h-full object-cover" />
+            ) : (
+              <span class="text-6xl">👨‍⚕️</span>
+            )}
+          </div>
+          <div class="p-6 flex-grow flex flex-col">
+            <div class="mb-4">
+              <span class="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full font-semibold uppercase tracking-wide">
+                {doctor.specialty}
+              </span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900 mb-2">{doctor.name}</h2>
+            <p class="text-slate-600 text-sm mb-6 line-clamp-3 flex-grow">
+              {doctor.bio || 'Sin biografía disponible.'}
+            </p>
+            <a 
+              href={`/disponibilidad/${doctor.id}`}
+              class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+            >
+              Ver Disponibilidad
+            </a>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    {doctors?.length === 0 && (
+      <div class="text-center py-12">
+        <p class="text-slate-500 text-lg">No hay doctores registrados en el sistema aún.</p>
+      </div>
+    )}
+  </section>
+</MainLayout>
