@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 
 export const server = {
     bookAppointment: defineAction({
-        accept: 'form',
         input: z.object({
             doctorId: z.string(),
             patientName: z.string().min(2, "El nombre es muy corto"),

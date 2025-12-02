@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
-import format from 'date-fns/format';
-import parse from 'date-fns/parse';
-import startOfWeek from 'date-fns/startOfWeek';
-import getDay from 'date-fns/getDay';
-import es from 'date-fns/locale/es';
+import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { es } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { actions } from 'astro:actions';
 
@@ -20,6 +17,9 @@ const localizer = dateFnsLocalizer({
     locales,
 });
 
+const WORK_START_HOUR = 8;
+const WORK_END_HOUR = 20;
+
 interface Appointment {
     start: Date;
     end: Date;
@@ -32,31 +32,31 @@ interface Props {
 }
 
 export default function CalendarView({ doctorId, initialAppointments = [] }: Props) {
-    const [events, setEvents] = useState<Appointment[]>(initialAppointments);
+    const [newAppointments, setNewAppointments] = useState<Appointment[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
     const [isBooking, setIsBooking] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '' });
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    // Convert string dates to Date objects if coming from JSON
-    useEffect(() => {
-        const parsedEvents = initialAppointments.map(evt => ({
+    // Memoize parsed events to avoid double-render and unnecessary calculations
+    const allEvents = useMemo(() => {
+        const parsedInitial = initialAppointments.map(evt => ({
             ...evt,
             start: new Date(evt.start),
             end: new Date(evt.end)
         }));
-        setEvents(parsedEvents);
-    }, [initialAppointments]);
+        return [...parsedInitial, ...newAppointments];
+    }, [initialAppointments, newAppointments]);
 
-    const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
+    const handleSelectSlot = useCallback(({ start, end }: { start: Date; end: Date }) => {
         // Prevent selecting past dates
         if (start < new Date()) {
             setMessage({ type: 'error', text: 'No puedes reservar en el pasado.' });
             return;
         }
 
-        // Check for conflicts locally (basic check)
-        const hasConflict = events.some(evt =>
+        // Check for conflicts locally
+        const hasConflict = allEvents.some(evt =>
             (start >= evt.start && start < evt.end) ||
             (end > evt.start && end <= evt.end)
         );
@@ -69,7 +69,7 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
         setSelectedSlot({ start, end });
         setIsBooking(true);
         setMessage(null);
-    };
+    }, [allEvents]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,7 +93,7 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
         if (data?.success) {
             setMessage({ type: 'success', text: '¡Cita reservada con éxito!' });
             // Add new event locally to update UI immediately
-            setEvents([...events, {
+            setNewAppointments(prev => [...prev, {
                 start: selectedSlot.start,
                 end: selectedSlot.end,
                 title: 'Reservado'
@@ -106,6 +106,17 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
         }
     };
 
+    // Close modal on Escape key
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isBooking) {
+                setIsBooking(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isBooking]);
+
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg">
             {message && (
@@ -117,7 +128,7 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
             <div className="h-[600px] mb-8">
                 <Calendar
                     localizer={localizer}
-                    events={events}
+                    events={allEvents}
                     startAccessor="start"
                     endAccessor="end"
                     style={{ height: '100%' }}
@@ -125,8 +136,8 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
                     defaultView={Views.WEEK}
                     selectable
                     onSelectSlot={handleSelectSlot}
-                    min={new Date(0, 0, 0, 8, 0, 0)} // 8 AM
-                    max={new Date(0, 0, 0, 20, 0, 0)} // 8 PM
+                    min={new Date(0, 0, 0, WORK_START_HOUR, 0, 0)}
+                    max={new Date(0, 0, 0, WORK_END_HOUR, 0, 0)}
                     culture='es'
                     messages={{
                         next: "Siguiente",
@@ -144,7 +155,14 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
             </div>
 
             {isBooking && selectedSlot && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) setIsBooking(false);
+                    }}
+                >
                     <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl">
                         <h3 className="text-2xl font-bold mb-4 text-slate-900">Confirmar Cita</h3>
                         <p className="mb-6 text-slate-600">
@@ -153,8 +171,9 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
+                                <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
                                 <input
+                                    id="name"
                                     type="text"
                                     required
                                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -163,8 +182,9 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                                 <input
+                                    id="email"
                                     type="email"
                                     required
                                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
