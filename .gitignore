@@ -23,9 +23,34 @@ Thumbs.db
 
 # Editor
 .vscode/
+# Build artifacts
+dist/
+.vercel/
+
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.production
+.env.development
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
 .idea/
 *.swp
 *.swo
 
 # Astro
-.astro/
+.astro/docsBMad/analysis/research/domain-non-generic-ai-web-design-research-2025-12-01.md
