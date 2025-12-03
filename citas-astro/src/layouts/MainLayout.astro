@@ -10,32 +10,53 @@ const { title } = Astro.props;
 <html lang="es">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Sistema de Citas Médicas" />
+		<meta name="description" content="Sistema de Agentes Inteligentes" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<style is:global>
+			.bg-architect {
+				background-color: #F9F9F7;
+				background-image: 
+					radial-gradient(at 80% 0%, hsla(28,100%,74%,0.1) 0px, transparent 50%),
+					radial-gradient(at 0% 50%, hsla(189,100%,56%,0.05) 0px, transparent 50%);
+				position: relative;
+			}
+			.bg-architect::before {
+				content: "";
+				position: fixed;
+				inset: 0;
+				background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+				pointer-events: none;
+				z-index: 50;
+			}
+		</style>
 	</head>
-	<body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-900">
-		<header class="bg-white shadow-sm sticky top-0 z-10">
-			<nav class="container mx-auto px-4 py-4 flex justify-between items-center">
-				<a href="/" class="text-2xl font-bold text-blue-600 flex items-center gap-2">
-					🏥 Citas<span class="text-slate-800">Astro</span>
+	<body class="bg-architect min-h-screen flex flex-col font-sans text-primary selection:bg-accent selection:text-white">
+		
+		<header class="bg-background border-b border-border sticky top-0 z-40">
+			<nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+				<a href="/" class="text-xl font-display font-bold text-primary flex items-center gap-2 tracking-tight">
+					CITAS / ASTRO
 				</a>
-				<div class="space-x-4">
-					<a href="/" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Doctores</a>
-					<a href="#" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Mis Citas</a>
+				<div class="space-x-6">
+					<a href="/" class="font-mono text-sm text-secondary hover:text-primary transition-colors">DOCTORES</a>
+					<a href="#" class="font-mono text-sm text-secondary hover:text-primary transition-colors">MIS CITAS</a>
 				</div>
 			</nav>
 		</header>
 
-		<main class="flex-grow container mx-auto px-4 py-8">
+		<main class="flex-grow container mx-auto px-6 py-12 relative z-10">
 			<slot />
 		</main>
 
-		<footer class="bg-slate-900 text-slate-400 py-8 mt-auto">
-			<div class="container mx-auto px-4 text-center">
-				<p>&copy; {new Date().getFullYear()} Sistema de Citas Astro. Demo para Práctica de Agentes.</p>
+		<footer class="bg-background border-t border-border text-secondary py-8 mt-auto">
+			<div class="container mx-auto px-6 text-center">
+				<p class="font-mono text-xs">&copy; {new Date().getFullYear()} Sistema de Citas Astro. Gestión Médica Profesional.</p>
 			</div>
 		</footer>
 	</body>

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import '../styles/calendar-technical.css';
 import { actions } from 'astro:actions';
 
 const locales = {
@@ -51,7 +51,7 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
     const handleSelectSlot = useCallback(({ start, end }: { start: Date; end: Date }) => {
         // Prevent selecting past dates
         if (start < new Date()) {
-            setMessage({ type: 'error', text: 'No puedes reservar en el pasado.' });
+            setMessage({ type: 'error', text: 'No se puede reservar en el pasado.' });
             return;
         }
 
@@ -86,23 +86,23 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
         });
 
         if (error) {
-            setMessage({ type: 'error', text: error.message || 'Error al reservar.' });
+            setMessage({ type: 'error', text: error.message || 'Error al procesar la reserva.' });
             return;
         }
 
         if (data?.success) {
-            setMessage({ type: 'success', text: '¡Cita reservada con éxito!' });
+            setMessage({ type: 'success', text: 'CITA CONFIRMADA' });
             // Add new event locally to update UI immediately
             setNewAppointments(prev => [...prev, {
                 start: selectedSlot.start,
                 end: selectedSlot.end,
-                title: 'Reservado'
+                title: 'RESERVADO'
             }]);
             setIsBooking(false);
             setFormData({ name: '', email: '' });
             setSelectedSlot(null);
         } else {
-            setMessage({ type: 'error', text: 'No se pudo reservar.' });
+            setMessage({ type: 'error', text: 'Error desconocido.' });
         }
     };
 
@@ -118,14 +118,17 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
     }, [isBooking]);
 
     return (
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className="h-full font-mono text-sm">
             {message && (
-                <div className={`p-4 mb-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {message.text}
+                <div className={`p-4 mb-6 border ${message.type === 'success'
+                    ? 'bg-green-50 border-green-500 text-green-700'
+                    : 'bg-red-50 border-red-500 text-red-700'
+                    }`}>
+                    {'>'} {message.text}
                 </div>
             )}
 
-            <div className="h-[600px] mb-8">
+            <div className="h-[600px] bg-white border border-border p-4">
                 <Calendar
                     localizer={localizer}
                     events={allEvents}
@@ -140,72 +143,73 @@ export default function CalendarView({ doctorId, initialAppointments = [] }: Pro
                     max={new Date(0, 0, 0, WORK_END_HOUR, 0, 0)}
                     culture='es'
                     messages={{
-                        next: "Siguiente",
-                        previous: "Anterior",
-                        today: "Hoy",
-                        month: "Mes",
-                        week: "Semana",
-                        day: "Día",
-                        date: "Fecha",
-                        time: "Hora",
-                        event: "Evento",
-                        noEventsInRange: "Sin citas en este rango",
+                        next: "SIGUIENTE",
+                        previous: "ANTERIOR",
+                        today: "HOY",
+                        month: "MES",
+                        week: "SEMANA",
+                        day: "DÍA",
+                        date: "FECHA",
+                        time: "HORA",
+                        event: "CITA",
+                        noEventsInRange: "SIN CITAS",
                     }}
                 />
             </div>
 
             {isBooking && selectedSlot && (
                 <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
                     role="dialog"
                     aria-modal="true"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) setIsBooking(false);
                     }}
                 >
-                    <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl">
-                        <h3 className="text-2xl font-bold mb-4 text-slate-900">Confirmar Cita</h3>
-                        <p className="mb-6 text-slate-600">
-                            Reservando para el <strong>{format(selectedSlot.start, 'dd/MM/yyyy HH:mm')}</strong>
+                    <div className="bg-background border border-primary p-8 max-w-md w-full shadow-brutal relative">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-accent"></div>
+                        <h3 className="text-2xl font-display font-bold mb-2 text-primary">CONFIRMAR CITA</h3>
+                        <p className="mb-8 text-secondary font-mono text-sm">
+                            {'>'} FECHA: <strong className="text-accent">{format(selectedSlot.start, 'dd/MM/yyyy HH:mm')}</strong>
                         </p>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
+                                <label htmlFor="name" className="block text-xs font-bold text-secondary uppercase tracking-widest mb-2 font-mono">Nombre del Paciente</label>
                                 <input
                                     id="name"
                                     type="text"
                                     required
-                                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-4 py-3 bg-surface border border-border text-primary focus:border-accent focus:ring-0 transition-all outline-none font-mono text-sm"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                <label htmlFor="email" className="block text-xs font-bold text-secondary uppercase tracking-widest mb-2 font-mono">Email de Contacto</label>
                                 <input
                                     id="email"
                                     type="email"
                                     required
-                                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-4 py-3 bg-surface border border-border text-primary focus:border-accent focus:ring-0 transition-all outline-none font-mono text-sm"
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 />
                             </div>
 
-                            <div className="flex justify-end gap-3 mt-6">
+                            <div className="flex justify-end gap-4 mt-8">
                                 <button
                                     type="button"
                                     onClick={() => setIsBooking(false)}
-                                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium"
+                                    className="px-6 py-3 text-secondary hover:text-primary border border-transparent hover:border-border font-mono text-xs uppercase tracking-wider transition-colors"
                                 >
-                                    Cancelar
+                                    CANCELAR
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                                    className="px-6 py-3 bg-primary text-white hover:bg-accent font-mono text-xs uppercase tracking-wider transition-all"
                                 >
-                                    Confirmar Reserva
+                                    CONFIRMAR
                                 </button>
                             </div>
                         </form>

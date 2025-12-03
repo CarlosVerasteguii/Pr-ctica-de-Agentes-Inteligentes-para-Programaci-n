@@ -1,0 +1,115 @@
+/* Technical Theme for React Big Calendar */
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+.rbc-calendar {
+    color: #1C1917;
+    /* primary */
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.rbc-header {
+    border-bottom: 1px solid #E7E5E4;
+    padding: 12px 0;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: #57534E;
+    /* secondary */
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+    border: 1px solid #E7E5E4;
+    border-radius: 0;
+    /* No rounded corners */
+    background-color: #FFFFFF;
+}
+
+.rbc-day-bg+.rbc-day-bg {
+    border-left: 1px solid #E7E5E4;
+}
+
+.rbc-month-row+.rbc-month-row {
+    border-top: 1px solid #E7E5E4;
+}
+
+.rbc-date-cell {
+    padding: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.rbc-event {
+    background-color: #1C1917;
+    /* primary */
+    border-radius: 0;
+    /* Square */
+    border: 1px solid #1C1917;
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    padding: 2px 4px;
+}
+
+.rbc-event.rbc-selected {
+    background-color: #EA580C;
+    /* accent */
+    border-color: #EA580C;
+}
+
+.rbc-time-content {
+    border-top: 1px solid #E7E5E4;
+}
+
+.rbc-time-header-content {
+    border-left: 1px solid #E7E5E4;
+}
+
+.rbc-timeslot-group {
+    border-bottom: 1px solid #E7E5E4;
+}
+
+.rbc-time-view-resources .rbc-time-gutter,
+.rbc-time-view-resources .rbc-time-header-gutter {
+    border-right: 1px solid #E7E5E4;
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+    border-bottom: 1px solid #E7E5E4;
+}
+
+.rbc-day-slot .rbc-time-slot {
+    border-top: 1px solid #F5F5F4;
+    /* lighter border for slots */
+}
+
+.rbc-today {
+    background-color: #F9F9F7;
+    /* background color */
+}
+
+.rbc-current-time-indicator {
+    background-color: #EA580C;
+    /* accent */
+    height: 2px;
+}
+
+/* Custom scrollbar for technical feel */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F9F9F7;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #E7E5E4;
+    border: 1px solid #F9F9F7;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #57534E;
+}

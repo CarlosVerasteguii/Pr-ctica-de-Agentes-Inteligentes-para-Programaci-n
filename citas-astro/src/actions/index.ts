@@ -6,18 +6,18 @@ export const server = {
     bookAppointment: defineAction({
         input: z.object({
             doctorId: z.string(),
-            patientName: z.string().min(2, "El nombre es muy corto"),
-            patientEmail: z.string().email("Email inválido"),
+            patientName: z.string().min(2, "ERROR: INVALID_IDENTIFIER_LENGTH"),
+            patientEmail: z.string().email("ERROR: INVALID_CONTACT_PROTOCOL"),
             startTime: z.string().datetime(), // Validates ISO string
         }),
         handler: async (input) => {
             const { doctorId, patientName, patientEmail, startTime } = input;
 
-            console.log(`Intentando reservar para Dr. ${doctorId} a las ${startTime}`);
+            console.log(`[SYSTEM_LOG] Initiating allocation sequence for Unit ${doctorId} at ${startTime}`);
 
             // 1. Validate that the time is in the future
             if (new Date(startTime) < new Date()) {
-                throw new Error("No puedes reservar en el pasado.");
+                throw new Error("ERROR: TEMPORAL_VIOLATION_DETECTED");
             }
 
             // 2. Attempt to insert into Supabase
@@ -37,19 +37,19 @@ export const server = {
                 .single();
 
             if (error) {
-                console.error('Supabase Error:', error);
+                console.error('[SYSTEM_ERROR] Database Transaction Failed:', error);
 
                 // Handle unique constraint violation (Race Condition)
                 if (error.code === '23505') { // Postgres code for unique_violation
-                    throw new Error("Lo sentimos, este horario acaba de ser reservado por otra persona.");
+                    throw new Error("ERROR: RESOURCE_CONTENTION_DETECTED (Slot taken)");
                 }
 
-                throw new Error("Error al guardar la cita. Intente nuevamente.");
+                throw new Error("ERROR: WRITE_OPERATION_FAILED");
             }
 
             return {
                 success: true,
-                message: 'Cita reservada con éxito',
+                message: 'ALLOCATION_CONFIRMED',
                 appointmentId: data.id
             };
         },
